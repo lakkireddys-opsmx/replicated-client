@@ -1,0 +1,81 @@
+apiVersion: kots.io/v1beta1
+kind: HelmChart
+metadata:
+  name: susmitachart
+spec:
+  # chart identifies a matching chart from a .tgz
+  chart:
+    name: oes
+    chartVersion: 3.9.3
+
+  #exclude: "repl{{ ConfigOptionEquals `include_chart` `include_chart_no`}}"
+
+  # helmVersion identifies the Helm Version used to render the Chart. Default is v2.
+  helmVersion: v3
+  values:
+    global:
+      createIngress: "repl{{ ConfigOption `createIngress`}}"
+    spinnaker:
+      gitopsHalyard:
+        enabled: "repl{{ ConfigOption `genabled`}}"
+      pipelinePromotion:
+        enabled: "repl{{ ConfigOption `penabled`}}"
+  optionalValues:
+    - when: "repl{{ ConfigOptionEquals `createIngress` `1`}}"
+      values:
+        global:
+          spinDeck: 
+            host: "repl{{ if ConfigOptionEquals `createIngress` `1`}}repl{{ ConfigOption `spindeck`}}repl{{ end}}"
+          spinGate:
+            host: "repl{{ if ConfigOptionEquals `createIngress` `1`}}repl{{ ConfigOption `spingate`}}repl{{ end}}"
+          oesUI:
+            host: "repl{{ if ConfigOptionEquals `createIngress` `1`}}repl{{ ConfigOption `oesui`}}repl{{ end}}"
+          oesGate:
+            host: "repl{{ if ConfigOptionEquals `createIngress` `1`}}repl{{ ConfigOption `oesgate`}}repl{{ end}}"
+    - when: "repl{{ ConfigOptionEquals `genabled` `1`}}"
+      values:
+        spinnaker:
+          gitopsHalyard:
+            repo: 
+              type: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `repotype`}}repl{{ end}}"
+              baseUrlHostName: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `baseUrlHostName`}}repl{{ end}}"
+              organization: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `organization`}}repl{{ end}}"
+              projectName: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `projectName`}}repl{{ end}}"
+              repository: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `repository`}}repl{{ end}}"
+              dynamicAccRepository: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `dynamicAccRepository`}}repl{{ end}}"
+              halConfigPath: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `halConfigPath`}}repl{{ end}}"
+              dynAccntConfigPath: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `dynAccntConfigPath`}}repl{{ end}}"
+              username: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `username`}}repl{{ end}}"
+              token: "repl{{ if ConfigOptionEquals `genabled` `1`}}repl{{ ConfigOption `token`}}repl{{ end}}"
+    - when: '{{repl and (ConfigOptionEquals `genabled` `1`) (ConfigOptionEquals `repotype` `s3`)}}'
+      values:
+        spinnaker:
+          gitopsHalyard:
+            repo:
+              s3accesskey: "repl{{ ConfigOption `s3accesskey`}}"
+              s3secretkey: "repl{{ ConfigOption `s3secretkey`}}"
+              s3bucket: "repl{{ ConfigOption `s3bucket`}}"
+              s3region: "repl{{ ConfigOption `s3region`}}"
+    - when: "repl{{ ConfigOptionEquals `penabled` `1`}}"
+      values:
+        spinnaker:
+          pipelinePromotion:
+            repo:
+              type: "repl{{ ConfigOption `piperepotype`}}"
+              organization: "repl{{ ConfigOption `porganization`}}"
+              projectName: "repl{{ ConfigOption `projectName`}}"
+              repository: "repl{{ ConfigOption `prepository`}}"
+              rootFolder: "repl{{ ConfigOption `rootFolder`}}"
+              baseUrl: "repl{{ ConfigOption `baseUrl`}}"
+              username: "repl{{ ConfigOption `username`}}"
+              token: "repl{{ ConfigOption `token`}}"
+              branch: "repl{{ ConfigOption `branch`}}"
+              usermail: "repl{{ ConfigOption `usermail`}}"
+    - when: "{{repl and (ConfigOptionEquals `penabled` `1`) (ConfigOptionEquals `piperepotype` `s3`)}}"
+      values:
+        spinnaker:
+          pipelinePromotion:
+            repo:
+              AWS_ACCESS_KEY_ID: "repl{{ ConfigOption `awsaccesskeyid`}}"
+              AWS_SECRET_ACCESS_KEY: "repl{{ ConfigOption `awssecretkeyid`}}"
+
