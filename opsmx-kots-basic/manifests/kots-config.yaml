@@ -1,0 +1,16 @@
+apiVersion: kots.io/v1beta1
+kind: Config
+metadata:
+  name: config-oes
+spec:
+  groups:
+    - name: Enter Domain Name
+      title: Enter Domain Name
+      description: "Create a valid wildcard domain in DNS"
+      items:
+      - name: DN
+        title: Enter valid Domain Name
+        help_text: Spinnaker is accessible on spinnaker.example.ops.com and oes on oes.example.ops.com"
+        type: text
+        default: "example.ops.com"
+
