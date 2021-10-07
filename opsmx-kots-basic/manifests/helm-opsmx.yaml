@@ -1,0 +1,51 @@
+apiVersion: kots.io/v1beta1
+kind: HelmChart
+metadata:
+  name: oes
+spec:
+  # chart identifies a matching chart from a .tgz
+  chart:
+    name: oes
+    chartVersion: 3.9.6
+
+  #exclude: "repl{{ ConfigOptionEquals `include_chart` `include_chart_no`}}"
+
+  # helmVersion identifies the Helm Version used to render the Chart. Default is v2.
+  helmVersion: v3
+  values:
+    k8sServiceType: "repl{{ ConfigOption `k8sServiceType`}}"
+  optionalValues:
+    - when: "repl{{ ConfigOptionEquals `k8sServiceType` `NodePort`}}"
+      values:
+        global:
+          spinDeck:
+            host: "repl{{ ConfigOption `NodeIP`}}"
+            port: "repl{{ ConfigOption `spinPort`}}"
+          oesGate:
+            host: "repl{{ ConfigOption `NodeIP`}}"
+            port: "repl{{ ConfigOption `OESGate`}}"
+          oesUI:
+            host: "repl{{ ConfigOption `NodeIP`}}"
+            port: "repl{{ ConfigOption `OESPort`}}"
+    - when: "repl{{ ConfigOptionEquals `k8sServiceType` `LoadBalancer`}}"
+      values:
+        global:
+          autoConfiguration:
+            enabled: true
+    - when: "repl{{ ConfigOptionEquals `k8sServiceType` `ClusterIP`}}"
+      values:
+        k8sServiceType: ClusterIP       
+        global:
+          spinDeck:
+            host: localhost
+            port: 9000
+          spinGate:
+            host: localhost
+            port: 8084
+          oesUI:
+            host: localhost
+            port: 8080
+          oesGate:
+            host: localhost
+            port: 8084
+

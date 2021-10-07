@@ -4,13 +4,43 @@ metadata:
   name: config-oes
 spec:
   groups:
-    - name: Enter Domain Name
-      title: Enter Domain Name
-      description: "Create a valid wildcard domain in DNS"
+    - name: k8sServiceType
+      title: Choose the suitable service Type
+      description: "Basic Mode Installs OES in HTTP Mode"
+      items: 
+      - name: k8sServiceType
+        type: select_one
+        description: If ClusterIP, Please portForward the application on http://localhost:9000 and http://localhost:80
+        items:
+        - name: NodePort
+          title: NodePort
+        - name: LoadBalancer
+          title: Ext. LoadBalancer
+        - name: ClusterIP
+          title: ClusterIP
+    - name: Enter NodePort Details
+      title: Enter NodePort Details
+      description: "IP and Ports are required"
       items:
-      - name: DN
-        title: Enter valid Domain Name
-        help_text: Spinnaker is accessible on spinnaker.example.ops.com and oes on oes.example.ops.com"
+      - name: NodeIP
+        title: Enter Node IP Address Details
         type: text
-        default: "example.ops.com"
+        default: "3.4.5.6"
+        when: '{{repl (ConfigOptionEquals "k8sServiceType" "NodePort")}}'
+      - name: spinPort
+        title: Enter NodePort for Spinnaker UI
+        type: text
+        default: "32000"
+        when: '{{repl (ConfigOptionEquals "k8sServiceType" "NodePort")}}'
+      - name: OESPort
+        title: Enter NodePort for OES UI
+        type: text
+        default: "32001"
+        when: '{{repl (ConfigOptionEquals "k8sServiceType" "NodePort")}}'
+      - name: OESGate
+        title: Enter NodePort for OES Gate
+        type: text
+        default: "32002"
+        when: '{{repl (ConfigOptionEquals "k8sServiceType" "NodePort")}}'
+      when: '{{repl (ConfigOptionEquals "k8sServiceType" "NodePort")}}'
 
