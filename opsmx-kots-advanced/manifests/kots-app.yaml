@@ -3,12 +3,12 @@ kind: Application
 metadata:
   name: app-slug
 spec:
-  title: susmita-srini-test
-  icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/kubernetes/icon/color/kubernetes-icon-color.png
+  title: OES(OpsMx Enterprise Spinnaker)-Advanced
+  icon: https://raw.githubusercontent.com/lakkireddys-opsmx/replicated/main/opsmx.png
   statusInformers:
     - deployment/spin-gate
   ports:
-    - serviceName: "example-nginx"
-      servicePort: 80
+    - serviceName: "oes-gate"
+      servicePort: 8084
       localPort: 8888
       applicationUrl: "http://example-nginx"

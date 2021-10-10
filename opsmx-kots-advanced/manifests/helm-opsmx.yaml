@@ -1,0 +1,141 @@
+apiVersion: kots.io/v1beta1
+kind: HelmChart
+metadata:
+  name: oes
+spec:
+  # chart identifies a matching chart from a .tgz
+  chart:
+    name: oes
+    chartVersion: 3.9.3
+
+  #exclude: "repl{{ ConfigOptionEquals `include_chart` `include_chart_no`}}"
+
+  # helmVersion identifies the Helm Version used to render the Chart. Default is v2.
+  helmVersion: v3
+  values:
+    installRedis: "repl{{ ConfigOption `installRedis`}}"
+    global:
+      createIngress: "repl{{ ConfigOption `createIngress`}}"
+      installOpenLdap: "repl{{ ConfigOption `installOpenLdap`}}"
+      ldap:
+        enabled: "repl{{ ConfigOption `installOpenLdap`}}"
+    spinnaker:
+      gitopsHalyard:
+        enabled: "repl{{ ConfigOption `genabled`}}"
+        pipelinePromotion:
+          enabled: "repl{{ ConfigOption `penabled`}}"
+  optionalValues:
+    - when: "repl{{ ConfigOptionEquals `createIngress` `1`}}"
+      values:
+        global:
+          spinDeck:
+            host: spinnaker.repl{{ ConfigOption `DN`}}
+            #host: "repl{{ if ConfigOptionEquals `createIngress` `1`}}repl{{ ConfigOption `spindeck`}}repl{{ end}}"
+          spinGate:
+            host: spinnaker-gate.repl{{ ConfigOption `DN`}}
+          oesUI:
+            host: oes.repl{{ ConfigOption `DN`}}
+          oesGate:
+            host: oes-gate.repl{{ ConfigOption `DN`}}
+                #host: "repl{{ if ConfigOptionEquals `createIngress` `1`}}repl{{ ConfigOption `oesgate`}}repl{{ end}}"
+        forwarder:
+          externalName: controller.repl{{ ConfigOption `DN`}}
+    - when: "repl{{ ConfigOptionEquals `installRedis` `0`}}"
+      values:
+        redis:
+          external:
+            host: "repl{{ ConfigOption `externalhost`}}"
+            port: "repl{{ ConfigOption `externalport`}}"
+    - when: "{{repl and (ConfigOptionEquals `installOpenLdap` `0`) (ConfigOptionEquals `auth` `ldap`)}}"
+      values:
+        global:
+          ldap:
+            enabled: true
+            url: "repl{{ ConfigOption `ldapurl`}}"
+            managerDn: "repl{{ ConfigOption `lmanagerdn`}}"
+            managerPassword: "repl{{ ConfigOption `lmanagerpass`}}"
+            groupSearchBase: "repl{{ ConfigOption `groupsearchbase`}}"
+            groupSearchFilter: "repl{{ ConfigOption `groupsearchfilter`}}"
+            groupRoleAttributes: "repl{{ ConfigOption `grouproleattr`}}"
+            userDnPattern: "repl{{ ConfigOption `userdnpatt`}}"
+    - when: "{{repl and (ConfigOptionEquals `installOpenLdap` `0`) (ConfigOptionEquals `auth` `saml`)}}"
+      values:
+        gate:
+          config:
+            saml:
+              enabled: true
+              keyStorePassword: "repl{{ ConfigOption `keyStorePassword`}}"
+              keyStoreAliasName: "repl{{ ConfigOption `keyStoreAliasName`}}"
+              issuerId: "repl{{ ConfigOption `issuerId`}}"
+              userSource: "repl{{ ConfigOption `userSource`}}"
+              jksSecretName: "repl{{ ConfigOption `jksSecretName`}}"
+              metadataSecretName: "repl{{ ConfigOption `metadataSecretName`}}"
+    - when: "{{repl and (ConfigOptionEquals `installOpenLdap` `0`) (ConfigOptionEquals `auth` `oauth2`)}}"
+      values:
+        gate:
+          config:
+            oauth2:
+              enabled: true
+              client:
+                clientId: "repl{{ ConfigOption `clientId`}}"
+                clientSecret: "repl{{ ConfigOption `clientSecret`}}"
+                accessTokenUri: "repl{{ ConfigOption `accessTokenUri`}}"
+                userAuthorizationUri: "repl{{ ConfigOption `userAuthorizationUri`}}"
+                scope: "repl{{ ConfigOption `scope`}}"
+              resource:
+                userInfoUri: "repl{{ ConfigOption `userInfoUri`}}"
+              userInfoMapping:
+                email: "repl{{ ConfigOption `useremail`}}"
+                firstName: "repl{{ ConfigOption `userfname`}}"
+                lastName: "repl{{ ConfigOption `userlname`}}"
+                username: "repl{{ ConfigOption `username`}}"
+              provider: "repl{{ ConfigOption `provider`}}"
+    - when: 'repl{{ and (ConfigOptionEquals "penabled" "1" | not) (ConfigOptionEquals "repotype" "s3") }}'
+      values:
+        spinnaker:
+          gitopsHalyard:
+            repo:
+              type: "repl{{ ConfigOption `repotype`}}"
+              baseUrlHostName: "repl{{ ConfigOption `baseUrlHostName`}}"
+              organization: "repl{{ ConfigOption `organization`}}"
+              projectName: "repl{{ ConfigOption `projectName`}}"
+              repository: "repl{{ ConfigOption `repository`}}"
+              dynamicAccRepository: "repl{{ ConfigOption `dynamicAccRepository`}}"
+              halConfigPath: "repl{{ ConfigOption `halConfigPath`}}"
+              dynAccntConfigPath: "repl{{ ConfigOption `dynAccntConfigPath`}}"
+              username: "repl{{ ConfigOption `gusername`}}"
+              token: "repl{{ ConfigOption `gtoken`}}"
+    - when: '{{repl and (ConfigOptionEquals `genabled` `1`) (ConfigOptionEquals `repotype` `s3`)}}'
+      values:
+        spinnaker:
+          gitopsHalyard:
+            repo:
+              s3accesskey: "repl{{ ConfigOption `s3accesskey`}}"
+              s3secretkey: "repl{{ ConfigOption `s3secretkey`}}"
+              s3bucket: "repl{{ ConfigOption `s3bucket`}}"
+              s3region: "repl{{ ConfigOption `s3region`}}"
+    - when: 'repl{{ and (ConfigOptionEquals "penabled" "1" | not) (ConfigOptionEquals "piperepotype" "s3") }}'
+      values:
+        spinnaker:
+          gitopsHalyard:
+            pipelinePromotion:
+              repo:
+                type: "repl{{ ConfigOption `piperepotype`}}"
+                organization: "repl{{ ConfigOption `porganization`}}"
+                projectName: "repl{{ ConfigOption `projectName`}}"
+                repository: "repl{{ ConfigOption `prepository`}}"
+                rootFolder: "repl{{ ConfigOption `rootFolder`}}"
+                baseUrl: "repl{{ ConfigOption `baseUrl`}}"
+                username: "repl{{ ConfigOption `pusername`}}"
+                token: "repl{{ ConfigOption `ptoken`}}"
+                branch: "repl{{ ConfigOption `pbranch`}}"
+                usermail: "repl{{ ConfigOption `pusermail`}}"
+    - when: "{{repl and (ConfigOptionEquals `penabled` `1`) (ConfigOptionEquals `piperepotype` `s3`)}}"
+      values:
+        spinnaker:
+          gitopsHalyard:
+            pipelinePromotion:
+              repo:
+                AWS_ACCESS_KEY_ID: "repl{{ ConfigOption `awsaccesskeyid`}}"
+                AWS_SECRET_ACCESS_KEY: "repl{{ ConfigOption `awssecretkeyid`}}"
+

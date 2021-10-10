@@ -10,52 +10,202 @@ spec:
       items:
         - name: createIngress
           title: Expose OES/spin using an ingress
-          help_text: An example field to toggle inclusion of an Ingress Object
+          help_text: Please make sure you create a DNS record before Installing
           type: bool
           default: "1"
-    - name: spinDeck
-      title: Enter Spin Deck URL
-      description: "Spin Deck URL"
+    - name: DN
+      title: Ingress Host details
+      description: "Create a valid wildcard domain in DNS"
       items:
-      - name: spindeck
-        title: enter spin deck hostname
-        help_text: An example field to toggle inclusion of an Ingress Object
+      - name: DN
+        title: Enter valid Domain Name
+        help_text: "Spinnaker is accessible on spinnaker.example.ops.com and oes on oes.example.ops.com and "
         type: text
-        default: "spin.example.ops.com"
+        default: "example.ops.com"
         when: '{{repl (ConfigOptionEquals "createIngress" "1")}}'
       when: '{{repl (ConfigOptionEquals "createIngress" "1")}}'
-    - name: spinGate
-      title: Enter Spin Gate URL
-      description: "Spin Gate URL"
+    - name: frwderexternalName
+      title: OES Agent 
+      description: |
+              "Use this if you want to configure an OES agent in the unaccessible remote cluster"
       items:
-      - name: spingate
-        title: enter spin gate hostname
-        help_text: An example field to toggle inclusion of an Ingress Object
-        type: text
-        default: "spin.example.ops.com"
+      - name: frwderexternalName
+        title: Enter OES Agent server Hostname
+        type: bool
+        help_text: Agent will be accessible on the controller.example.ops.com
+        default: "1"
         when: '{{repl (ConfigOptionEquals "createIngress" "1")}}'
       when: '{{repl (ConfigOptionEquals "createIngress" "1")}}'
-    - name: oesUI
-      title: Enter OES UI URL
-      description: "OES UI URL"
+    - name: installRedis
+      title: Install Redis 
+      description: Installs Bitnami Redis alongside OES
       items:
-      - name: oesui
-        title: enter oes ui  hostname
-        help_text: An example field to toggle inclusion of an Ingress Object
-        type: text
-        default: "oes.example.ops.com"
-        when: '{{repl (ConfigOptionEquals "createIngress" "1")}}'
-      when: '{{repl (ConfigOptionEquals "createIngress" "1")}}'
-    - name: oesGate
-      title: Enter OES Gate URL
-      description: "OES Gate URL"
+        - name: installRedis
+          title: Install's Redis as a cache store for OES
+          help_text: Please uncheck if you want to configure a Ext. Redis
+          type: bool
+          default: "1"
+    - name: Enter Redis Details
+      title: Enter Ext. Redis Details
+      description: "Ext. Redis URL and Port are required"
       items:
-      - name: oesgate
-        title: enter oes gate hostname
-        help_text: An example field to toggle inclusion of an Ingress Object
+      - name: externalhost
+        title: Enter Redis URL
         type: text
-        default: "oes.example.ops.com"
-        when: '{{repl (ConfigOptionEquals "createIngress" "1")}}'
+        when: '{{repl (ConfigOptionEquals "installRedis" "0")}}'
+      - name: externalport
+        title: Enter NodePort for Spinnaker UI
+        type: text
+        default: "6379"
+        when: '{{repl (ConfigOptionEquals "installRedis" "0")}}'
+      when: '{{repl (ConfigOptionEquals "installRedis" "0")}}'
+    - name: installOpenLdap
+      title: Install OpenLdap for OES
+      description: Installs OpenLdap as part of OES and configures authn and authz
+      items:
+        - name: installOpenLdap
+          title: OpenLdap
+          type: bool
+          default: "1"
+    - name: auth
+      title: Authentication and Authorization Mechanism for OES
+      description: "Autn and Autz Mechanisms to be used with OES"
+      items:
+      - name: auth
+        type: select_one
+        items:
+        - name: ldap
+          title: Ext. LDAP
+        - name: saml
+          title: SAML
+        - name: oauth2
+          title: OAUTH2
+        when: '{{repl (ConfigOptionEquals "installOpenLdap" "0")}}'
+      when: '{{repl (ConfigOptionEquals "installOpenLdap" "0")}}'
+    - name: ldapdetails
+      title: LDAP Details
+      description: "Enter LDAP Details required to configure OES for authn and authz"
+      items:
+      - name: ldapurl
+        title: Enter the external LDAP URL
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+      - name: lmanagerdn
+        title: Enter ManagerDN
+        type: text
+        default: "cn=admin,dc=example,dc=org"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+      - name: lmanagerpass
+        title: Enter Manager Password
+        type: password
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+      - name: groupsearchbase
+        title: Enter Group Search Base
+        type: text
+        default: "ou=groups,dc=example,dc=org"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+      - name: groupsearchfilter
+        title: Enter Group Search Filter
+        type: text
+        default: "member={0}"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+      - name: grouproleattr
+        title: Enter Group Role Attributes
+        type: text
+        default: "cn"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+      - name: userdnpatt
+        title: Enter User DN Pattern
+        type: text
+        default: "cn={0},dc=example,dc=org"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+      when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "ldap")}}'
+    - name: samldetails
+      title: SAML Details
+      description: "Enter SAML Details required to configure OES for authn and authz. jksSecretName and metadataSecretName are to be preconfigured as the kubernetes secrets"
+      items:
+      - name: keyStorePassword
+        title: Enter KeyStore Password
+        type: password
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "saml")}}'
+      - name: keyStoreAliasName
+        title: Enter KeyStore Alias Name
+        type: text
+        default: "saml"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "saml")}}'
+      - name: issuerId
+        title: Enter Issuer ID of the SAML Application
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "saml")}}'
+      - name: userSource
+        title: Enter UserSource for OES
+        type: text
+        default: "gate"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "saml")}}'
+      - name: jksSecretName
+        title: Enter JKS Secret Name
+        type: text
+        default: "oes-saml-jks"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "saml")}}'
+      - name: metadataSecretName
+        title: Enter the Metadata secret Name
+        type: text
+        default: "metadata-xml"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "saml")}}'
+      when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "saml")}}'
+    - name: oauth2details
+      title: OAUTH2 Details
+      description: "Enter OAUTH2 Details required to configure OES for authn and authz. jksSecretName and metadataSecretName are to be preconfigured as the kubernetes secrets"
+      items:
+      - name: clientId
+        title: Enter Client ID
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: clientSecret
+        title: Enter Client Secret
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: accessTokenUri
+        title: Enter Access Token URL
+        type: text
+        default: "https://github.com/login/oauth/access_token"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: userAuthorizationUri
+        title: Enter User Authorization URI
+        type: text
+        default: "https://github.com/login/oauth/authorize"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: scope
+        title: Enter User Email
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: userInfoUri
+        title: Enter User Info URI
+        type: text
+        default: "https://api.github.com/user"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: useremail
+        title: Enter User's EMAIL
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: userfname
+        title: Enter User's FirstName
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: userlname
+        title: Enter User's LastName
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: username
+        title: Enter your Username
+        type: text
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      - name: provider
+        title: Enter name of your provider
+        type: text
+        default: "github"
+        when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
+      when: '{{repl and (ConfigOptionEquals "installOpenLdap" "0") (ConfigOptionEquals "auth" "oauth2")}}'
     - name: genabled
       title: GitOps Style
       description: "Installs Spinnaker in GitOps Style"
@@ -81,7 +231,7 @@ spec:
           title: stash
       when: '{{repl (ConfigOptionEquals "genabled" "1")}}'
     - name: baseUrlHostName
-      title: Base URL Hostname of the Repo 
+      title: Base URL Hostname of the Repo
       description: "Base URL Hostname of the Repo "
       items:
       - name: baseUrlHostName
@@ -92,10 +242,10 @@ spec:
         when: '{{repl or (ConfigOptionEquals "repotype" "git") (ConfigOptionEquals "repotype" "stash")}}'
       when: '{{repl (ConfigOptionEquals "genabled" "1")}}'
     - name: organization
-      title: Organization 
+      title: Organization
       description: Organization
-      items: 
-      - name: organization 
+      items:
+      - name: organization
         title: Enter Organization Name
         type: text
         default: "OpsMx"
@@ -150,20 +300,20 @@ spec:
         default: "dynaccount/"
         when: '{{repl or (ConfigOptionEquals "repotype" "git") (ConfigOptionEquals "repotype" "stash")}}'
       when: '{{repl (ConfigOptionEquals "genabled" "1")}}'
-    - name: username
+    - name: gusername
       title: UserName
       description: Git/Stash Username
       items:
-      - name: username
+      - name: gusername
         title: Git/Stash Username
         type: text
         when: '{{repl or (ConfigOptionEquals "repotype" "git") (ConfigOptionEquals "repotype" "stash")}}'
       when: '{{repl (ConfigOptionEquals "genabled" "1")}}'
-    - name: token
+    - name: gtoken
       title: Git/Stash Token
       description: Git/Stash Token
       items:
-      - name: token
+      - name: gtoken
         title: Git/Stash Token
         type: password
         when: '{{repl or (ConfigOptionEquals "repotype" "git") (ConfigOptionEquals "repotype" "stash")}}'
@@ -228,11 +378,12 @@ spec:
         - name: stash
           title: stash
         when: '{{repl (ConfigOptionEquals "penabled" "1")}}'
+      when: '{{repl (ConfigOptionEquals "penabled" "1")}}'
     - name: porganization
-      title: Organization 
+      title: Organization
       description: Organization
-      items: 
-      - name: porganization 
+      items:
+      - name: porganization
         title: Enter Organization Name for PipelinePromotion
         type: text
         default: "OpsMx"
@@ -241,7 +392,7 @@ spec:
     - name: prepository
       title: Repository
       description: Repository
-      items: 
+      items:
       - name: prepository
         title: Enter Repository Name
         type: text
@@ -251,7 +402,7 @@ spec:
     - name: rootFolder
       title: root Folder Details
       description: rootFolder
-      items: 
+      items:
       - name: rootFolder
         title: Enter root Folder Details
         type: text
@@ -259,9 +410,9 @@ spec:
         when: '{{repl or (ConfigOptionEquals "piperepotype" "git") (ConfigOptionEquals "piperepotype" "stash")}}'
       when: '{{repl (ConfigOptionEquals "penabled" "1")}}'
     - name: baseUrl
-      title: Base URL of the Repo 
+      title: Base URL of the Repo
       description: Base URL of the Repo
-      items: 
+      items:
       - name: baseUrl
         title: Enter URL of the Repo
         type: text
@@ -286,20 +437,20 @@ spec:
         type: password
         when: '{{repl or (ConfigOptionEquals "piperepotype" "git") (ConfigOptionEquals "piperepotype" "stash")}}'
       when: '{{repl (ConfigOptionEquals "penabled" "1")}}'
-    - name: branch
+    - name: pbranch
       title: BranchName
       description: BranchName
       items:
-      - name: branch
+      - name: pbranch
         title: Branch
         type: text
         when: '{{repl or (ConfigOptionEquals "piperepotype" "git") (ConfigOptionEquals "piperepotype" "stash")}}'
       when: '{{repl (ConfigOptionEquals "penabled" "1")}}'
-    - name: usermail
+    - name: pusermail
       title: UserMail
       description: UserMail Details
       items:
-      - name: usermail
+      - name: pusermail
         title: UserMail Details
         type: text
         when: '{{repl or (ConfigOptionEquals "piperepotype" "git") (ConfigOptionEquals "piperepotype" "stash")}}'
@@ -322,3 +473,5 @@ spec:
         type: password
         when: '{{repl (ConfigOptionEquals "piperepotype" "s3")}}'
       when: '{{repl (ConfigOptionEquals "penabled" "1")}}'
+
+
